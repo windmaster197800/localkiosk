@@ -44,13 +44,16 @@ def main():
         sys.exit(1)
 
     # Deduplicate while preserving order (thumbnails and main images are often
-    # the same data stored twice — keep unique ones only)
-    seen = {}
+    # the same data stored twice — keep unique ones only).
+    # Use a hash of the full string; JPEG headers are identical across images
+    # so a short prefix is not a reliable fingerprint.
+    import hashlib
+    seen = set()
     unique = []
     for m in matches:
-        key = m[:64]  # first 64 chars is a good fingerprint
+        key = hashlib.sha1(m.encode()).hexdigest()
         if key not in seen:
-            seen[key] = True
+            seen.add(key)
             unique.append(m)
 
     print(f'Found {len(matches)} data URLs → {len(unique)} unique images')
